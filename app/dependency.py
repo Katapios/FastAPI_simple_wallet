@@ -1,7 +1,13 @@
 from typing import Generator
+
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from app.repository import users as users_repository
+from app.models import User
 
+security = HTTPBearer()
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
@@ -9,3 +15,12 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security),
+                     db: Session = Depends(get_db))-> User:
+    login = credentials.credentials
+    user = users_repository.get_user(db, login)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return user
