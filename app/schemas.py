@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 
 from app.enum import CurrencyEnum
 from pydantic import BaseModel, Field, field_validator
@@ -56,3 +57,33 @@ class WalletResponse(BaseModel):
     name: str
     balance: Decimal
     currency: CurrencyEnum
+
+class OperationResponse(BaseModel):
+    model_config = {"from_attributes": True}
+    id: int
+    wallet_id: int
+    type: str
+    amount: Decimal
+    currency: CurrencyEnum
+    category: str | None
+    created_at: datetime
+
+class TransferCreateSchema(BaseModel):
+    from_wallet_id: int
+    to_wallet_id: int
+    amount: Decimal
+
+    @field_validator('to_wallet_id')
+    @classmethod
+    def wallets_must_differ(cls, v: int, info
+    )-> int:
+        if "from_wallet_id" in info.data and v == info.data["from_wallet_id"]:
+            raise ValueError("Wallet id is same")
+        return v
+
+    @field_validator('amount')
+    @classmethod
+    def amount_gt_zero(cls, v: Decimal) -> Decimal:
+        if v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
