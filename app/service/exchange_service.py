@@ -2,6 +2,7 @@ from decimal import Decimal
 from typing import Dict, Tuple
 
 from app.enum import CurrencyEnum
+from fastapi import requests
 
 FALLBACK_RATES: Dict[Tuple[str,str], Decimal] = {
     (CurrencyEnum.USD, CurrencyEnum.RUB): Decimal(str(95.0)),
@@ -13,4 +14,17 @@ FALLBACK_RATES: Dict[Tuple[str,str], Decimal] = {
 }
 
 def get_exchange_rate(base: CurrencyEnum, target: CurrencyEnum) -> Decimal:
-    return FALLBACK_RATES.get((base,target), Decimal(1))
+    url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/{base}.json"
+
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        base_map = data.get("base", {})
+        rate = base_map.get(target)
+        if rate is not None and isinstance(rate, (int, float)):
+            return Decimal(rate)
+        raise KeyError('Rate not found')
+
+    except Exception:
+        return FALLBACK_RATES.get((base, target), Decimal(1))
