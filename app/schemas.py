@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from app.enum import CurrencyEnum
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -27,6 +28,7 @@ class OperationRequest(BaseModel):
 class CreateWalletRequest(BaseModel):
     name: str = Field(..., max_length=127)
     initial_balance: Decimal = 0
+    currency: CurrencyEnum = CurrencyEnum.RUB
 
     @field_validator('name')
     def name_not_empty(cls, value: str) -> str:
@@ -47,3 +49,10 @@ class UserRequest(BaseModel):
 class UserResponse(UserRequest):
     model_config = {"from_attributes": True}
     id: int
+
+class WalletResponse(BaseModel):
+    model_config = {"from_attributes": True}
+    id: int
+    name: str
+    balance: Decimal
+    currency: CurrencyEnum
