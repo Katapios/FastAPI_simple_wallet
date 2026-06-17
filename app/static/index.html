@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Wallet</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Auth -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <h1>Simple Wallet</h1>
+      <p class="subtitle">Введите логин для входа или регистрации</p>
+      <form id="login-form">
+        <div class="form-row">
+          <label for="login-input">Логин</label>
+          <input id="login-input" type="text" placeholder="например, ivan" required maxlength="127" autofocus>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Войти</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- App -->
+  <div id="app-screen" class="app hidden">
+    <header>
+      <h1>Simple Wallet</h1>
+      <div class="user-bar">
+        <span>Пользователь: <strong id="user-login"></strong></span>
+        <button id="logout-btn" class="btn btn-secondary btn-sm">Выйти</button>
+        <button id="refresh-btn" class="btn btn-secondary btn-sm">Обновить</button>
+      </div>
+    </header>
+
+    <div class="card balance-card">
+      <div class="label">Общий баланс (в RUB)</div>
+      <div class="amount" id="total-balance">—</div>
+      <div class="hint">Сумма всех кошельков с конвертацией по курсу</div>
+    </div>
+
+    <div class="grid grid-2">
+      <!-- Wallets -->
+      <div class="card">
+        <h2>Мои кошельки</h2>
+        <ul id="wallet-list" class="wallet-list"></ul>
+
+        <h2 style="margin-top: 1.5rem">Создать кошелёк</h2>
+        <form id="create-wallet-form">
+          <div class="form-row">
+            <label for="wallet-name">Название</label>
+            <input id="wallet-name" type="text" required maxlength="127" placeholder="card">
+          </div>
+          <div class="form-row">
+            <label for="wallet-balance">Начальный баланс</label>
+            <input id="wallet-balance" type="number" min="0" step="0.01" value="0">
+          </div>
+          <div class="form-row">
+            <label for="wallet-currency">Валюта</label>
+            <select id="wallet-currency">
+              <option value="rub">RUB</option>
+              <option value="usd">USD</option>
+              <option value="eur">EUR</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Создать</button>
+        </form>
+      </div>
+
+      <!-- Operations -->
+      <div class="card">
+        <h2>Операции</h2>
+        <div class="tabs">
+          <button class="tab active" data-panel="panel-income">Доход</button>
+          <button class="tab" data-panel="panel-expense">Расход</button>
+          <button class="tab" data-panel="panel-transfer">Перевод</button>
+        </div>
+
+        <div id="panel-income" class="tab-panel active">
+          <form id="income-form">
+            <div class="form-row">
+              <label for="income-wallet">Кошелёк</label>
+              <select id="income-wallet" required></select>
+            </div>
+            <div class="form-row">
+              <label for="income-amount">Сумма</label>
+              <input id="income-amount" type="number" min="0.01" step="0.01" required>
+            </div>
+            <div class="form-row">
+              <label for="income-desc">Описание</label>
+              <input id="income-desc" type="text" maxlength="255" placeholder="Зарплата">
+            </div>
+            <button type="submit" class="btn btn-success">Добавить доход</button>
+          </form>
+        </div>
+
+        <div id="panel-expense" class="tab-panel">
+          <form id="expense-form">
+            <div class="form-row">
+              <label for="expense-wallet">Кошелёк</label>
+              <select id="expense-wallet" required></select>
+            </div>
+            <div class="form-row">
+              <label for="expense-amount">Сумма</label>
+              <input id="expense-amount" type="number" min="0.01" step="0.01" required>
+            </div>
+            <div class="form-row">
+              <label for="expense-desc">Описание</label>
+              <input id="expense-desc" type="text" maxlength="255" placeholder="Продукты">
+            </div>
+            <button type="submit" class="btn btn-danger">Добавить расход</button>
+          </form>
+        </div>
+
+        <div id="panel-transfer" class="tab-panel">
+          <form id="transfer-form">
+            <div class="form-row">
+              <label for="transfer-from">Откуда</label>
+              <select id="transfer-from" required></select>
+            </div>
+            <div class="form-row">
+              <label for="transfer-to">Куда</label>
+              <select id="transfer-to" required></select>
+            </div>
+            <div class="form-row">
+              <label for="transfer-amount">Сумма</label>
+              <input id="transfer-amount" type="number" min="0.01" step="0.01" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Перевести</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="card" style="margin-top: 1.25rem">
+      <h2>История операций</h2>
+      <div class="filter-row">
+        <div class="form-row">
+          <label for="filter-wallet">Кошелёк</label>
+          <select id="filter-wallet"></select>
+        </div>
+        <div class="form-row">
+          <label for="filter-date-from">С</label>
+          <input id="filter-date-from" type="date">
+        </div>
+        <div class="form-row">
+          <label for="filter-date-to">По</label>
+          <input id="filter-date-to" type="date">
+        </div>
+        <button id="filter-btn" class="btn btn-secondary">Фильтр</button>
+      </div>
+      <div class="ops-table-wrap">
+        <table class="ops-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Тип</th>
+              <th>Кошелёк</th>
+              <th>Сумма</th>
+              <th>Валюта</th>
+              <th>Категория</th>
+            </tr>
+          </thead>
+          <tbody id="ops-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>

@@ -83,7 +83,7 @@ def get_operations_list(
     result = []
     for operation in operations:
         result.append(OperationResponse.model_validate(operation))
-    return operations
+    return result
 
 async def transfer_between_wallets(
         db: Session,
